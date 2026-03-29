@@ -1,5 +1,6 @@
 #include "../parser/parser.h"
-#include "../ast/ast_printer.h"
+#include "../semantic/semantic.h"
+#include "../parser/ast_printer.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -20,6 +21,7 @@ int main(int argc, char* argv[]) {
     buffer << file.rdbuf();
     std::string source = buffer.str();
 
+    // --- Parse ---
     Parser parser(source);
     auto program = parser.parseProgram();
 
@@ -33,5 +35,18 @@ int main(int argc, char* argv[]) {
     std::cout << "Parsed successfully: "
               << program->statements.size() << " top-level statement(s).\n\n";
     printAst(program.get());
+
+    // --- Semantic analysis ---
+    SemanticAnalyzer analyzer(program.get());
+    if (!analyzer.analyze()) {
+        std::cout << "\n";
+        for (const auto& err : analyzer.errors()) {
+            std::cerr << "Semantic error [line " << err.line << "]: "
+                      << err.message << std::endl;
+        }
+        return 1;
+    }
+
+    std::cout << "\nSemantic analysis passed.\n";
     return 0;
 }

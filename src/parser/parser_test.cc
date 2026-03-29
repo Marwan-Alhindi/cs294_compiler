@@ -1,5 +1,5 @@
 #include "parser.h"
-#include "../ast/ast.h"
+#include "ast.h"
 #include <gtest/gtest.h>
 #include <string>
 

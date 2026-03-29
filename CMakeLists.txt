@@ -7,10 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # --- Main binary ---
 add_executable(rustc
     src/main/main.cpp
+    src/semantic/semantic.cpp
     src/parser/parser.cpp
-    src/ast/ast.cpp
-    src/ast/ast_printer.cpp    src/lexer/lexer.cpp
-    src/token/token.cpp
+    src/parser/ast.cpp
+    src/parser/ast_printer.cpp    src/lexer/lexer.cpp
+    src/lexer/token.cpp
 )
 
 # --- GoogleTest ---
@@ -26,8 +27,8 @@ enable_testing()
 
 # --- Token tests ---
 add_executable(token_test
-    src/token/token_test.cc
-    src/token/token.cpp
+    src/lexer/token_test.cc
+    src/lexer/token.cpp
 )
 target_link_libraries(token_test GTest::gtest_main)
 add_test(NAME TokenTests COMMAND token_test)
@@ -36,16 +37,16 @@ add_test(NAME TokenTests COMMAND token_test)
 add_executable(lexer_test
     src/lexer/lexer_test.cc
     src/lexer/lexer.cpp
-    src/token/token.cpp
+    src/lexer/token.cpp
 )
 target_link_libraries(lexer_test GTest::gtest_main)
 add_test(NAME LexerTests COMMAND lexer_test)
 
 # --- AST tests ---
 add_executable(ast_test
-    src/ast/ast_test.cc
-    src/ast/ast.cpp
-    src/ast/ast_printer.cpp)
+    src/parser/ast_test.cc
+    src/parser/ast.cpp
+    src/parser/ast_printer.cpp)
 target_link_libraries(ast_test GTest::gtest_main)
 add_test(NAME AstTests COMMAND ast_test)
 
@@ -53,9 +54,22 @@ add_test(NAME AstTests COMMAND ast_test)
 add_executable(parser_test
     src/parser/parser_test.cc
     src/parser/parser.cpp
-    src/ast/ast.cpp
-    src/ast/ast_printer.cpp    src/lexer/lexer.cpp
-    src/token/token.cpp
+    src/parser/ast.cpp
+    src/parser/ast_printer.cpp    src/lexer/lexer.cpp
+    src/lexer/token.cpp
 )
 target_link_libraries(parser_test GTest::gtest_main)
 add_test(NAME ParserTests COMMAND parser_test)
+
+# --- Semantic tests ---
+add_executable(semantic_test
+    src/semantic/semantic_test.cc
+    src/semantic/semantic.cpp
+    src/parser/parser.cpp
+    src/parser/ast.cpp
+    src/parser/ast_printer.cpp
+    src/lexer/lexer.cpp
+    src/lexer/token.cpp
+)
+target_link_libraries(semantic_test GTest::gtest_main)
+add_test(NAME SemanticTests COMMAND semantic_test)

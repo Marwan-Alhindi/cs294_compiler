@@ -1,7 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "../token/token.h"
+#include "token.h"
 #include <string>
 #include <vector>
 
