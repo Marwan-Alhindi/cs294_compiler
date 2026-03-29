@@ -1,48 +1,105 @@
-FN fn
-IDENT main
-LPAREN (
-RPAREN )
-LBRACE {
-LET let
-IDENT x
-ASSIGN =
-NUMBER 42
-SEMICOLON ;
-LET let
-MUT mut
-IDENT y
-ASSIGN =
-NUMBER 0
-SEMICOLON ;
-IF if
-IDENT x
-EQ ==
-IDENT y
-LBRACE {
-RETURN return
-SEMICOLON ;
-RBRACE }
-ELSE else
-LBRACE {
-IDENT y
-ASSIGN =
-IDENT x
-PLUS +
-NUMBER 1
-SEMICOLON ;
-RBRACE }
-IDENT fn_name
-SEMICOLON ;
-WHILE while
-IDENT y
-GT >
-NUMBER 0
-LBRACE {
-IDENT y
-ASSIGN =
-IDENT y
-MINUS -
-NUMBER 1
-SEMICOLON ;
-RBRACE }
-RBRACE }
+===== LEXER OUTPUT =====
+
+FN  fn  [line 1]
+IDENT  main  [line 1]
+LPAREN  (  [line 1]
+RPAREN  )  [line 1]
+LBRACE  {  [line 1]
+LET  let  [line 2]
+IDENT  x  [line 2]
+ASSIGN  =  [line 2]
+NUMBER  42  [line 2]
+SEMICOLON  ;  [line 2]
+LET  let  [line 3]
+MUT  mut  [line 3]
+IDENT  y  [line 3]
+ASSIGN  =  [line 3]
+NUMBER  0  [line 3]
+SEMICOLON  ;  [line 3]
+IF  if  [line 4]
+IDENT  x  [line 4]
+EQ  ==  [line 4]
+IDENT  y  [line 4]
+LBRACE  {  [line 4]
+RETURN  return  [line 5]
+SEMICOLON  ;  [line 5]
+RBRACE  }  [line 6]
+ELSE  else  [line 6]
+LBRACE  {  [line 6]
+IDENT  y  [line 7]
+ASSIGN  =  [line 7]
+IDENT  x  [line 7]
+PLUS  +  [line 7]
+NUMBER  1  [line 7]
+SEMICOLON  ;  [line 7]
+RBRACE  }  [line 8]
+IDENT  fn_name  [line 9]
+SEMICOLON  ;  [line 9]
+WHILE  while  [line 11]
+IDENT  y  [line 11]
+GT  >  [line 11]
+NUMBER  0  [line 11]
+LBRACE  {  [line 11]
+IDENT  y  [line 12]
+ASSIGN  =  [line 12]
+IDENT  y  [line 12]
+MINUS  -  [line 12]
+NUMBER  1  [line 12]
+SEMICOLON  ;  [line 12]
+RBRACE  }  [line 13]
+RBRACE  }  [line 14]
+
+===== PARSER OUTPUT =====
+
+ProgramNode
+  FnDeclNode("main", params=[])
+    BlockNode
+      LetStmtNode(mut=false, name="x")
+        init:
+          NumberLiteral(42)
+      LetStmtNode(mut=true, name="y")
+        init:
+          NumberLiteral(0)
+      IfStmtNode
+        condition:
+          BinaryExpr("==")
+            left:
+              IdentExpr("x")
+            right:
+              IdentExpr("y")
+        thenBranch:
+          BlockNode
+            ReturnStmtNode
+        elseBranch:
+          BlockNode
+            ExprStmtNode
+              AssignExpr(target="y")
+                value:
+                  BinaryExpr("+")
+                    left:
+                      IdentExpr("x")
+                    right:
+                      NumberLiteral(1)
+      ExprStmtNode
+        IdentExpr("fn_name")
+      WhileStmtNode
+        condition:
+          BinaryExpr(">")
+            left:
+              IdentExpr("y")
+            right:
+              NumberLiteral(0)
+        body:
+          BlockNode
+            ExprStmtNode
+              AssignExpr(target="y")
+                value:
+                  BinaryExpr("-")
+                    left:
+                      IdentExpr("y")
+                    right:
+                      NumberLiteral(1)
+
+===== SEMANTIC OUTPUT =====
+
+Error [line 9]: Undefined variable 'fn_name'

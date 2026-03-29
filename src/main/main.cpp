@@ -1,3 +1,5 @@
+#include "../lexer/lexer.h"
+#include "../lexer/token.h"
 #include "../parser/parser.h"
 #include "../semantic/semantic.h"
 #include "../parser/ast_printer.h"
@@ -21,7 +23,18 @@ int main(int argc, char* argv[]) {
     buffer << file.rdbuf();
     std::string source = buffer.str();
 
-    // --- Parse ---
+    // === Phase 1: Lexer ===
+    std::cout << "===== LEXER OUTPUT =====\n\n";
+    Lexer lexer(source);
+    auto tokens = lexer.tokenize();
+    for (const auto& tok : tokens) {
+        if (tok.type == TokenType::EOF_TOKEN) break;
+        std::cout << tokenTypeToString(tok.type) << "  " << tok.lexeme
+                  << "  [line " << tok.line << "]\n";
+    }
+
+    // === Phase 2: Parser ===
+    std::cout << "\n===== PARSER OUTPUT =====\n\n";
     Parser parser(source);
     auto program = parser.parseProgram();
 
@@ -32,21 +45,18 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::cout << "Parsed successfully: "
-              << program->statements.size() << " top-level statement(s).\n\n";
     printAst(program.get());
 
-    // --- Semantic analysis ---
+    // === Phase 3: Semantic Analysis ===
+    std::cout << "\n===== SEMANTIC OUTPUT =====\n\n";
     SemanticAnalyzer analyzer(program.get());
     if (!analyzer.analyze()) {
-        std::cout << "\n";
         for (const auto& err : analyzer.errors()) {
-            std::cerr << "Semantic error [line " << err.line << "]: "
-                      << err.message << std::endl;
+            std::cout << "Error [line " << err.line << "]: " << err.message << "\n";
         }
         return 1;
     }
 
-    std::cout << "\nSemantic analysis passed.\n";
+    std::cout << "No errors.\n";
     return 0;
 }
