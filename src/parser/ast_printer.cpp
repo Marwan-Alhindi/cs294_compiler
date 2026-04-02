@@ -23,9 +23,15 @@ static void printNode(const AstNode* node, std::ostream& out, int indent) {
             out << "FnDeclNode(\"" << n->name << "\", params=[";
             for (size_t i = 0; i < n->params.size(); ++i) {
                 if (i > 0) out << ", ";
-                out << n->params[i].name << ": " << n->params[i].typeName;
+                if (n->params[i].isSelf) {
+                    out << (n->params[i].isMutSelf ? "&mut self" : "&self");
+                } else {
+                    out << n->params[i].name << ": " << n->params[i].typeName;
+                }
             }
-            out << "])\n";
+            out << "]";
+            if (!n->returnType.empty()) out << " -> " << n->returnType;
+            out << ")\n";
             printNode(n->body.get(), out, indent + 1);
             break;
         }
@@ -92,9 +98,53 @@ static void printNode(const AstNode* node, std::ostream& out, int indent) {
             printNode(n->expr.get(), out, indent + 1);
             break;
         }
+        case NodeKind::LOOP_STMT: {
+            auto* n = static_cast<const LoopStmtNode*>(node);
+            out << "LoopStmtNode\n";
+            printNode(n->body.get(), out, indent + 1);
+            break;
+        }
+        case NodeKind::BREAK_STMT: {
+            out << "BreakStmtNode\n";
+            break;
+        }
+        case NodeKind::CONTINUE_STMT: {
+            out << "ContinueStmtNode\n";
+            break;
+        }
+        case NodeKind::STRUCT_DEF: {
+            auto* n = static_cast<const StructDefNode*>(node);
+            out << "StructDefNode(\"" << n->name << "\", fields=[";
+            for (size_t i = 0; i < n->fields.size(); ++i) {
+                if (i > 0) out << ", ";
+                out << n->fields[i].name << ": " << n->fields[i].typeName;
+            }
+            out << "])\n";
+            break;
+        }
+        case NodeKind::ENUM_DEF: {
+            auto* n = static_cast<const EnumDefNode*>(node);
+            out << "EnumDefNode(\"" << n->name << "\", variants=[";
+            for (size_t i = 0; i < n->variants.size(); ++i) {
+                if (i > 0) out << ", ";
+                out << n->variants[i];
+            }
+            out << "])\n";
+            break;
+        }
+        case NodeKind::IMPL_BLOCK: {
+            auto* n = static_cast<const ImplBlockNode*>(node);
+            out << "ImplBlockNode(\"" << n->targetName << "\")\n";
+            for (auto& m : n->methods)
+                printNode(m.get(), out, indent + 1);
+            break;
+        }
         case NodeKind::ASSIGN_EXPR: {
             auto* n = static_cast<const AssignExprNode*>(node);
-            out << "AssignExpr(target=\"" << n->target << "\")\n";
+            out << "AssignExpr(op=\"" << (n->op.empty() ? "=" : n->op + "=") << "\")\n";
+            printIndent(out, indent + 1);
+            out << "target:\n";
+            printNode(n->target.get(), out, indent + 2);
             printIndent(out, indent + 1);
             out << "value:\n";
             printNode(n->value.get(), out, indent + 2);
@@ -137,6 +187,79 @@ static void printNode(const AstNode* node, std::ostream& out, int indent) {
         case NodeKind::STRING_LITERAL: {
             auto* n = static_cast<const StringLiteralNode*>(node);
             out << "StringLiteral(\"" << n->value << "\")\n";
+            break;
+        }
+        case NodeKind::BOOL_LITERAL: {
+            auto* n = static_cast<const BoolLiteralNode*>(node);
+            out << "BoolLiteral(" << (n->value ? "true" : "false") << ")\n";
+            break;
+        }
+        case NodeKind::FIELD_ACCESS_EXPR: {
+            auto* n = static_cast<const FieldAccessExprNode*>(node);
+            out << "FieldAccess(\"" << n->field << "\")\n";
+            printNode(n->object.get(), out, indent + 1);
+            break;
+        }
+        case NodeKind::METHOD_CALL_EXPR: {
+            auto* n = static_cast<const MethodCallExprNode*>(node);
+            out << "MethodCall(\"" << n->method << "\")\n";
+            printIndent(out, indent + 1);
+            out << "object:\n";
+            printNode(n->object.get(), out, indent + 2);
+            for (auto& arg : n->args) {
+                printIndent(out, indent + 1);
+                out << "arg:\n";
+                printNode(arg.get(), out, indent + 2);
+            }
+            break;
+        }
+        case NodeKind::INDEX_EXPR: {
+            auto* n = static_cast<const IndexExprNode*>(node);
+            out << "IndexExpr\n";
+            printIndent(out, indent + 1);
+            out << "object:\n";
+            printNode(n->object.get(), out, indent + 2);
+            printIndent(out, indent + 1);
+            out << "index:\n";
+            printNode(n->index.get(), out, indent + 2);
+            break;
+        }
+        case NodeKind::PATH_EXPR: {
+            auto* n = static_cast<const PathExprNode*>(node);
+            out << "PathExpr(\"" << n->base << "::" << n->member << "\")\n";
+            break;
+        }
+        case NodeKind::CAST_EXPR: {
+            auto* n = static_cast<const CastExprNode*>(node);
+            out << "CastExpr(as \"" << n->targetType << "\")\n";
+            printNode(n->expr.get(), out, indent + 1);
+            break;
+        }
+        case NodeKind::ARRAY_LITERAL: {
+            auto* n = static_cast<const ArrayLiteralNode*>(node);
+            if (n->isRepeat) {
+                out << "ArrayLiteral(repeat)\n";
+                printIndent(out, indent + 1);
+                out << "value:\n";
+                printNode(n->repeatValue.get(), out, indent + 2);
+                printIndent(out, indent + 1);
+                out << "count:\n";
+                printNode(n->repeatCount.get(), out, indent + 2);
+            } else {
+                out << "ArrayLiteral(" << n->elements.size() << " elements)\n";
+                for (auto& elem : n->elements)
+                    printNode(elem.get(), out, indent + 1);
+            }
+            break;
+        }
+        case NodeKind::STRUCT_LITERAL: {
+            auto* n = static_cast<const StructLiteralNode*>(node);
+            out << "StructLiteral(\"" << n->structName << "\")\n";
+            for (auto& f : n->fields) {
+                printIndent(out, indent + 1);
+                out << f.name << ":\n";
+                printNode(f.value.get(), out, indent + 2);
+            }
             break;
         }
     }

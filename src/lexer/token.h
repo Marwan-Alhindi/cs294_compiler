@@ -6,19 +6,29 @@
 enum class TokenType {
     // Keywords
     FN, LET, MUT, IF, ELSE, WHILE, RETURN,
+    TRUE, FALSE, LOOP, BREAK, CONTINUE,
+    STRUCT, ENUM, IMPL, AS, CONST,
+    SELF_LOWER,  // self
 
     // Literals
     IDENT, NUMBER, STRING,
 
     // Operators
-    PLUS, MINUS, STAR, SLASH,
+    PLUS, MINUS, STAR, SLASH, PERCENT,
     ASSIGN, EQ, NEQ,
     LT, GT, LTE, GTE,
+    PLUS_ASSIGN, MINUS_ASSIGN, STAR_ASSIGN, SLASH_ASSIGN, PERCENT_ASSIGN,
+    AND_AND, OR_OR, NOT,
+    ARROW,       // ->
+    COLON_COLON, // ::
+    DOT,         // .
 
     // Punctuation
     LPAREN, RPAREN,
     LBRACE, RBRACE,
+    LBRACKET, RBRACKET,
     SEMICOLON, COLON, COMMA,
+    AMP,         // &
 
     // Special
     EOF_TOKEN,

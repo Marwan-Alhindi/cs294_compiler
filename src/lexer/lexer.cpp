@@ -78,6 +78,12 @@ Token Lexer::readNumber() {
         advance();
     }
     std::string lexeme = source.substr(start, pos - start);
+    // Skip optional type suffix (e.g., u32, i32, usize)
+    if (pos < source.length() && std::isalpha(peekChar())) {
+        while (pos < source.length() && (std::isalnum(peekChar()) || peekChar() == '_')) {
+            advance();
+        }
+    }
     return Token{TokenType::NUMBER, lexeme, line};
 }
 
@@ -128,10 +134,40 @@ Token Lexer::nextToken() {
 
     advance();
     switch (c) {
-        case '+': return Token{TokenType::PLUS, "+", line};
-        case '-': return Token{TokenType::MINUS, "-", line};
-        case '*': return Token{TokenType::STAR, "*", line};
-        case '/': return Token{TokenType::SLASH, "/", line};
+        case '+':
+            if (peekChar() == '=') {
+                advance();
+                return Token{TokenType::PLUS_ASSIGN, "+=", line};
+            }
+            return Token{TokenType::PLUS, "+", line};
+        case '-':
+            if (peekChar() == '>') {
+                advance();
+                return Token{TokenType::ARROW, "->", line};
+            }
+            if (peekChar() == '=') {
+                advance();
+                return Token{TokenType::MINUS_ASSIGN, "-=", line};
+            }
+            return Token{TokenType::MINUS, "-", line};
+        case '*':
+            if (peekChar() == '=') {
+                advance();
+                return Token{TokenType::STAR_ASSIGN, "*=", line};
+            }
+            return Token{TokenType::STAR, "*", line};
+        case '/':
+            if (peekChar() == '=') {
+                advance();
+                return Token{TokenType::SLASH_ASSIGN, "/=", line};
+            }
+            return Token{TokenType::SLASH, "/", line};
+        case '%':
+            if (peekChar() == '=') {
+                advance();
+                return Token{TokenType::PERCENT_ASSIGN, "%=", line};
+            }
+            return Token{TokenType::PERCENT, "%", line};
         case '=':
             if (peekChar() == '=') {
                 advance();
@@ -143,7 +179,7 @@ Token Lexer::nextToken() {
                 advance();
                 return Token{TokenType::NEQ, "!=", line};
             }
-            return Token{TokenType::ILLEGAL, "!", line};
+            return Token{TokenType::NOT, "!", line};
         case '<':
             if (peekChar() == '=') {
                 advance();
@@ -156,12 +192,32 @@ Token Lexer::nextToken() {
                 return Token{TokenType::GTE, ">=", line};
             }
             return Token{TokenType::GT, ">", line};
+        case '&':
+            if (peekChar() == '&') {
+                advance();
+                return Token{TokenType::AND_AND, "&&", line};
+            }
+            return Token{TokenType::AMP, "&", line};
+        case '|':
+            if (peekChar() == '|') {
+                advance();
+                return Token{TokenType::OR_OR, "||", line};
+            }
+            return Token{TokenType::ILLEGAL, "|", line};
+        case ':':
+            if (peekChar() == ':') {
+                advance();
+                return Token{TokenType::COLON_COLON, "::", line};
+            }
+            return Token{TokenType::COLON, ":", line};
+        case '.': return Token{TokenType::DOT, ".", line};
         case '(': return Token{TokenType::LPAREN, "(", line};
         case ')': return Token{TokenType::RPAREN, ")", line};
         case '{': return Token{TokenType::LBRACE, "{", line};
         case '}': return Token{TokenType::RBRACE, "}", line};
+        case '[': return Token{TokenType::LBRACKET, "[", line};
+        case ']': return Token{TokenType::RBRACKET, "]", line};
         case ';': return Token{TokenType::SEMICOLON, ";", line};
-        case ':': return Token{TokenType::COLON, ":", line};
         case ',': return Token{TokenType::COMMA, ",", line};
         default:
             return Token{TokenType::ILLEGAL, std::string(1, c), line};

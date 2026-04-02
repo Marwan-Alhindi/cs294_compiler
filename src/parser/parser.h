@@ -23,7 +23,6 @@ class Parser {
 public:
     explicit Parser(const std::string& source);
 
-    // Entry point. Returns the AST root. May be partial if hasErrors().
     std::unique_ptr<ProgramNode> parseProgram();
 
     bool hasErrors() const;
@@ -45,6 +44,9 @@ private:
     void recordError(const std::string& msg, int line);
     void synchronize();
 
+    // Type parsing
+    std::string parseType();
+
     // Statement parsers
     AstNodePtr parseStatement();
     AstNodePtr parseFnDecl();
@@ -54,15 +56,26 @@ private:
     AstNodePtr parseWhileStmt();
     AstNodePtr parseIfStmt();
     AstNodePtr parseExprStmt();
+    AstNodePtr parseLoopStmt();
+    AstNodePtr parseBreakStmt();
+    AstNodePtr parseContinueStmt();
+    AstNodePtr parseStructDef();
+    AstNodePtr parseEnumDef();
+    AstNodePtr parseImplBlock();
 
-    // Expression parsers (precedence climbing, bottom-up by binding strength)
+    // Expression parsers (precedence climbing)
     AstNodePtr parseExpression();
     AstNodePtr parseAssignment();
+    AstNodePtr parseLogicalOr();
+    AstNodePtr parseLogicalAnd();
     AstNodePtr parseComparison();
     AstNodePtr parseAdditive();
     AstNodePtr parseMultiplicative();
+    AstNodePtr parseCast();
     AstNodePtr parseUnary();
+    AstNodePtr parsePostfix(AstNodePtr left);
     AstNodePtr parsePrimary();
+    AstNodePtr parseArrayLiteral();
 };
 
 #endif // PARSER_H

@@ -63,9 +63,8 @@ TEST(Ast, ExprStmtNodeKind) {
 }
 
 TEST(Ast, AssignExprNodeKind) {
-    AssignExprNode node("x", 8);
+    AssignExprNode node(8);
     EXPECT_EQ(node.kind, NodeKind::ASSIGN_EXPR);
-    EXPECT_EQ(node.target, "x");
 }
 
 TEST(Ast, BinaryExprNodeKind) {

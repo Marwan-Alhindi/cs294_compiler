@@ -161,7 +161,10 @@ TEST(Parser, AssignmentExpr) {
     auto* stmt = as<ExprStmtNode>(prog->statements[0].get());
     ASSERT_EQ(stmt->expr->kind, NodeKind::ASSIGN_EXPR);
     auto* asgn = as<AssignExprNode>(stmt->expr.get());
-    EXPECT_EQ(asgn->target, "x");
+    ASSERT_NE(asgn->target, nullptr);
+    EXPECT_EQ(asgn->target->kind, NodeKind::IDENT_EXPR);
+    auto* target = as<IdentExprNode>(asgn->target.get());
+    EXPECT_EQ(target->name, "x");
     EXPECT_EQ(asgn->value->kind, NodeKind::NUMBER_LITERAL);
 }
 

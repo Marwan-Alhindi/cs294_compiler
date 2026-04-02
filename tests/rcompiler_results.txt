@@ -1,0 +1,385 @@
+===== RCompiler Test Results =====
+
+--- Sample PASS tests ---
+[basic1] No errors.
+[basic5] No errors.
+[if1] No errors.
+[if2] No errors.
+[loop1] No errors.
+[loop2] No errors.
+[array1] No errors.
+[misc1] No errors.
+[misc2] No errors.
+
+--- Sample FAIL tests (errors correctly detected) ---
+[basic2] Error detected: Parse error [line 67]: Expected field name
+[basic3] Error detected: Error [line 17]: Cannot assign to immutable variable 'index'
+[expr1] Error detected: Parse error [line 13]: Expected ';' after expression statement
+[expr2] Error detected: Parse error [line 12]: Expected identifier after '::'
+
+--- Full Pipeline Demo (basic1.rx) ---
+===== LEXER OUTPUT =====
+
+FN  fn  [line 10]
+IDENT  main  [line 10]
+LPAREN  (  [line 10]
+RPAREN  )  [line 10]
+LBRACE  {  [line 10]
+IDENT  exit  [line 11]
+LPAREN  (  [line 11]
+MINUS  -  [line 11]
+NUMBER  1  [line 11]
+RPAREN  )  [line 11]
+SEMICOLON  ;  [line 11]
+RBRACE  }  [line 12]
+
+===== PARSER OUTPUT =====
+
+ProgramNode
+  FnDeclNode("main", params=[])
+    BlockNode
+      ExprStmtNode
+        CallExpr("exit")
+          UnaryExpr("-")
+            NumberLiteral(1)
+
+===== SEMANTIC OUTPUT =====
+
+No errors.
+
+--- Full Pipeline Demo (basic5.rx - Stack struct) ---
+===== LEXER OUTPUT =====
+
+FN  fn  [line 10]
+IDENT  main  [line 10]
+LPAREN  (  [line 10]
+RPAREN  )  [line 10]
+LBRACE  {  [line 10]
+LET  let  [line 11]
+MUT  mut  [line 11]
+IDENT  stack  [line 11]
+COLON  :  [line 11]
+IDENT  Stack  [line 11]
+ASSIGN  =  [line 11]
+IDENT  Stack  [line 11]
+COLON_COLON  ::  [line 11]
+IDENT  new  [line 11]
+LPAREN  (  [line 11]
+RPAREN  )  [line 11]
+SEMICOLON  ;  [line 11]
+LET  let  [line 12]
+MUT  mut  [line 12]
+IDENT  i  [line 12]
+COLON  :  [line 12]
+IDENT  i32  [line 12]
+ASSIGN  =  [line 12]
+NUMBER  0  [line 12]
+SEMICOLON  ;  [line 12]
+WHILE  while  [line 13]
+LPAREN  (  [line 13]
+IDENT  i  [line 13]
+LT  <  [line 13]
+NUMBER  10  [line 13]
+RPAREN  )  [line 13]
+LBRACE  {  [line 13]
+IDENT  stack  [line 14]
+DOT  .  [line 14]
+IDENT  push  [line 14]
+LPAREN  (  [line 14]
+IDENT  i  [line 14]
+RPAREN  )  [line 14]
+SEMICOLON  ;  [line 14]
+IDENT  i  [line 15]
+PLUS_ASSIGN  +=  [line 15]
+NUMBER  1  [line 15]
+SEMICOLON  ;  [line 15]
+RBRACE  }  [line 16]
+WHILE  while  [line 17]
+LPAREN  (  [line 17]
+NOT  !  [line 17]
+IDENT  stack  [line 17]
+DOT  .  [line 17]
+IDENT  empty  [line 17]
+LPAREN  (  [line 17]
+RPAREN  )  [line 17]
+RPAREN  )  [line 17]
+LBRACE  {  [line 17]
+IDENT  stack  [line 18]
+DOT  .  [line 18]
+IDENT  pop  [line 18]
+LPAREN  (  [line 18]
+RPAREN  )  [line 18]
+SEMICOLON  ;  [line 18]
+RBRACE  }  [line 19]
+IDENT  exit  [line 20]
+LPAREN  (  [line 20]
+NUMBER  0  [line 20]
+RPAREN  )  [line 20]
+SEMICOLON  ;  [line 20]
+RBRACE  }  [line 21]
+STRUCT  struct  [line 23]
+IDENT  Stack  [line 23]
+LBRACE  {  [line 23]
+IDENT  data  [line 24]
+COLON  :  [line 24]
+LBRACKET  [  [line 24]
+IDENT  i32  [line 24]
+SEMICOLON  ;  [line 24]
+NUMBER  16  [line 24]
+RBRACKET  ]  [line 24]
+COMMA  ,  [line 24]
+IDENT  top  [line 25]
+COLON  :  [line 25]
+IDENT  usize  [line 25]
+COMMA  ,  [line 25]
+RBRACE  }  [line 26]
+IMPL  impl  [line 28]
+IDENT  Stack  [line 28]
+LBRACE  {  [line 28]
+FN  fn  [line 29]
+IDENT  new  [line 29]
+LPAREN  (  [line 29]
+RPAREN  )  [line 29]
+ARROW  ->  [line 29]
+IDENT  Self  [line 29]
+LBRACE  {  [line 29]
+IDENT  Stack  [line 30]
+LBRACE  {  [line 30]
+IDENT  data  [line 30]
+COLON  :  [line 30]
+LBRACKET  [  [line 30]
+NUMBER  0  [line 30]
+SEMICOLON  ;  [line 30]
+NUMBER  16  [line 30]
+RBRACKET  ]  [line 30]
+COMMA  ,  [line 30]
+IDENT  top  [line 30]
+COLON  :  [line 30]
+NUMBER  0  [line 30]
+RBRACE  }  [line 30]
+RBRACE  }  [line 31]
+RBRACE  }  [line 32]
+IMPL  impl  [line 34]
+IDENT  Stack  [line 34]
+LBRACE  {  [line 34]
+FN  fn  [line 35]
+IDENT  push  [line 35]
+LPAREN  (  [line 35]
+AMP  &  [line 35]
+MUT  mut  [line 35]
+SELF  self  [line 35]
+COMMA  ,  [line 35]
+IDENT  value  [line 35]
+COLON  :  [line 35]
+IDENT  i32  [line 35]
+RPAREN  )  [line 35]
+LBRACE  {  [line 35]
+SELF  self  [line 36]
+DOT  .  [line 36]
+IDENT  data  [line 36]
+LBRACKET  [  [line 36]
+SELF  self  [line 36]
+DOT  .  [line 36]
+IDENT  top  [line 36]
+RBRACKET  ]  [line 36]
+ASSIGN  =  [line 36]
+IDENT  value  [line 36]
+SEMICOLON  ;  [line 36]
+SELF  self  [line 37]
+DOT  .  [line 37]
+IDENT  top  [line 37]
+PLUS_ASSIGN  +=  [line 37]
+NUMBER  1  [line 37]
+SEMICOLON  ;  [line 37]
+RBRACE  }  [line 38]
+FN  fn  [line 40]
+IDENT  pop  [line 40]
+LPAREN  (  [line 40]
+AMP  &  [line 40]
+MUT  mut  [line 40]
+SELF  self  [line 40]
+RPAREN  )  [line 40]
+ARROW  ->  [line 40]
+IDENT  i32  [line 40]
+LBRACE  {  [line 40]
+IF  if  [line 41]
+LPAREN  (  [line 41]
+SELF  self  [line 41]
+DOT  .  [line 41]
+IDENT  top  [line 41]
+EQ  ==  [line 41]
+NUMBER  0  [line 41]
+RPAREN  )  [line 41]
+LBRACE  {  [line 41]
+RETURN  return  [line 42]
+NUMBER  0  [line 42]
+SEMICOLON  ;  [line 42]
+RBRACE  }  [line 43]
+SELF  self  [line 44]
+DOT  .  [line 44]
+IDENT  top  [line 44]
+MINUS_ASSIGN  -=  [line 44]
+NUMBER  1  [line 44]
+SEMICOLON  ;  [line 44]
+SELF  self  [line 45]
+DOT  .  [line 45]
+IDENT  data  [line 45]
+LBRACKET  [  [line 45]
+SELF  self  [line 45]
+DOT  .  [line 45]
+IDENT  top  [line 45]
+RBRACKET  ]  [line 45]
+RBRACE  }  [line 46]
+FN  fn  [line 48]
+IDENT  empty  [line 48]
+LPAREN  (  [line 48]
+AMP  &  [line 48]
+SELF  self  [line 48]
+RPAREN  )  [line 48]
+ARROW  ->  [line 48]
+IDENT  bool  [line 48]
+LBRACE  {  [line 48]
+SELF  self  [line 49]
+DOT  .  [line 49]
+IDENT  top  [line 49]
+EQ  ==  [line 49]
+NUMBER  0  [line 49]
+RBRACE  }  [line 50]
+RBRACE  }  [line 51]
+
+===== PARSER OUTPUT =====
+
+ProgramNode
+  FnDeclNode("main", params=[])
+    BlockNode
+      LetStmtNode(mut=true, name="stack", type="Stack")
+        init:
+          CallExpr("Stack::new")
+      LetStmtNode(mut=true, name="i", type="i32")
+        init:
+          NumberLiteral(0)
+      WhileStmtNode
+        condition:
+          BinaryExpr("<")
+            left:
+              IdentExpr("i")
+            right:
+              NumberLiteral(10)
+        body:
+          BlockNode
+            ExprStmtNode
+              MethodCall("push")
+                object:
+                  IdentExpr("stack")
+                arg:
+                  IdentExpr("i")
+            ExprStmtNode
+              AssignExpr(op="+=")
+                target:
+                  IdentExpr("i")
+                value:
+                  NumberLiteral(1)
+      WhileStmtNode
+        condition:
+          UnaryExpr("!")
+            MethodCall("empty")
+              object:
+                IdentExpr("stack")
+        body:
+          BlockNode
+            ExprStmtNode
+              MethodCall("pop")
+                object:
+                  IdentExpr("stack")
+      ExprStmtNode
+        CallExpr("exit")
+          NumberLiteral(0)
+  StructDefNode("Stack", fields=[data: [i32; 16], top: usize])
+  ImplBlockNode("Stack")
+    FnDeclNode("new", params=[] -> Self)
+      BlockNode
+        ExprStmtNode
+          StructLiteral("Stack")
+            data:
+              ArrayLiteral(repeat)
+                value:
+                  NumberLiteral(0)
+                count:
+                  NumberLiteral(16)
+            top:
+              NumberLiteral(0)
+  ImplBlockNode("Stack")
+    FnDeclNode("push", params=[&mut self, value: i32])
+      BlockNode
+        ExprStmtNode
+          AssignExpr(op="=")
+            target:
+              IndexExpr
+                object:
+                  FieldAccess("data")
+                    IdentExpr("self")
+                index:
+                  FieldAccess("top")
+                    IdentExpr("self")
+            value:
+              IdentExpr("value")
+        ExprStmtNode
+          AssignExpr(op="+=")
+            target:
+              FieldAccess("top")
+                IdentExpr("self")
+            value:
+              NumberLiteral(1)
+    FnDeclNode("pop", params=[&mut self] -> i32)
+      BlockNode
+        IfStmtNode
+          condition:
+            BinaryExpr("==")
+              left:
+                FieldAccess("top")
+                  IdentExpr("self")
+              right:
+                NumberLiteral(0)
+          thenBranch:
+            BlockNode
+              ReturnStmtNode
+                value:
+                  NumberLiteral(0)
+        ExprStmtNode
+          AssignExpr(op="-=")
+            target:
+              FieldAccess("top")
+                IdentExpr("self")
+            value:
+              NumberLiteral(1)
+        ExprStmtNode
+          IndexExpr
+            object:
+              FieldAccess("data")
+                IdentExpr("self")
+            index:
+              FieldAccess("top")
+                IdentExpr("self")
+    FnDeclNode("empty", params=[&self] -> bool)
+      BlockNode
+        ExprStmtNode
+          BinaryExpr("==")
+            left:
+              FieldAccess("top")
+                IdentExpr("self")
+            right:
+              NumberLiteral(0)
+
+===== SEMANTIC OUTPUT =====
+
+No errors.
+
+--- Unit Tests (5/5 pass) ---
+    Start 4: ParserTests
+4/5 Test #4: ParserTests ......................   Passed    0.00 sec
+    Start 5: SemanticTests
+5/5 Test #5: SemanticTests ....................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) =   0.02 sec
