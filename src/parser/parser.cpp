@@ -96,15 +96,15 @@ std::string Parser::parseType() {
         advance();
         std::string elemType = parseType();
         expect(TokenType::SEMICOLON, "Expected ';' in array type");
-        // Allow number or identifier as array size
+        // Allow number, identifier, or constant expression as array size
         std::string sizeStr;
-        if (check(TokenType::NUMBER)) {
-            sizeStr = current_.lexeme;
+        while (!check(TokenType::RBRACKET) && !check(TokenType::EOF_TOKEN)) {
+            sizeStr += current_.lexeme;
             advance();
-        } else if (check(TokenType::IDENT)) {
-            sizeStr = current_.lexeme;
-            advance();
-        } else {
+        }
+        // Trim trailing whitespace
+        while (!sizeStr.empty() && sizeStr.back() == ' ') sizeStr.pop_back();
+        if (sizeStr.empty()) {
             recordError("Expected array size", current_.line);
         }
         expect(TokenType::RBRACKET, "Expected ']' in array type");
@@ -147,6 +147,11 @@ std::unique_ptr<ProgramNode> Parser::parseProgram() {
 // ============================================================
 
 AstNodePtr Parser::parseStatement() {
+    // Skip empty statements (bare semicolons)
+    if (check(TokenType::SEMICOLON)) {
+        advance();
+        return nullptr;
+    }
     if (check(TokenType::FN))       return parseFnDecl();
     if (check(TokenType::LET) || check(TokenType::CONST)) return parseLetStmt();
     if (check(TokenType::RETURN))   return parseReturnStmt();
@@ -174,6 +179,7 @@ AstNodePtr Parser::parseFnDecl() {
     // Parse parameter list
     if (!check(TokenType::RPAREN)) {
         do {
+            if (check(TokenType::RPAREN)) break;  // trailing comma
             // Handle &self, &mut self, self
             if (check(TokenType::AMP)) {
                 advance();  // consume &
@@ -194,7 +200,7 @@ AstNodePtr Parser::parseFnDecl() {
                 Token paramName = expect(TokenType::IDENT, "Expected parameter name");
                 expect(TokenType::COLON, "Expected ':' after parameter name");
                 std::string paramType = parseType();
-                node->params.push_back(ParamNode{paramName.lexeme, "&" + paramType, false, false, paramName.line});
+                node->params.push_back(ParamNode{paramName.lexeme, "&" + paramType, false, false, false, paramName.line});
                 continue;
             }
             if (check(TokenType::SELF_LOWER)) {
@@ -207,10 +213,17 @@ AstNodePtr Parser::parseFnDecl() {
                 node->params.push_back(p);
                 continue;
             }
+            // Handle 'mut' keyword before parameter name
+            bool paramMut = match(TokenType::MUT);
             Token paramName = expect(TokenType::IDENT, "Expected parameter name");
             expect(TokenType::COLON, "Expected ':' after parameter name");
             std::string paramType = parseType();
-            node->params.push_back(ParamNode{paramName.lexeme, paramType, false, false, paramName.line});
+            ParamNode p;
+            p.name = paramName.lexeme;
+            p.typeName = paramType;
+            p.isMut = paramMut;
+            p.line = paramName.line;
+            node->params.push_back(p);
         } while (match(TokenType::COMMA));
     }
 
@@ -288,6 +301,9 @@ AstNodePtr Parser::parseWhileStmt() {
     advance();  // consume WHILE
 
     auto node = std::make_unique<WhileStmtNode>(line);
+    if (!check(TokenType::LPAREN)) {
+        recordError("Expected '(' after 'while' keyword", current_.line);
+    }
     node->condition = parseExpression();
     node->body = parseBlock();
     return node;
@@ -298,6 +314,9 @@ AstNodePtr Parser::parseIfStmt() {
     advance();  // consume IF
 
     auto node = std::make_unique<IfStmtNode>(line);
+    if (!check(TokenType::LPAREN)) {
+        recordError("Expected '(' after 'if' keyword", current_.line);
+    }
     node->condition = parseExpression();
     node->thenBranch = parseBlock();
 
@@ -336,7 +355,14 @@ AstNodePtr Parser::parseBreakStmt() {
     int line = current_.line;
     advance();  // consume BREAK
     auto node = std::make_unique<BreakStmtNode>(line);
-    expect(TokenType::SEMICOLON, "Expected ';' after 'break'");
+    // break with optional value: break expr
+    if (!check(TokenType::SEMICOLON) && !check(TokenType::RBRACE)) {
+        // Parse break value (ignore it for now, just consume)
+        parseExpression();
+    }
+    if (!check(TokenType::RBRACE)) {
+        expect(TokenType::SEMICOLON, "Expected ';' after 'break'");
+    }
     return node;
 }
 
@@ -433,14 +459,20 @@ AstNodePtr Parser::parseAssignment() {
 
     if (check(TokenType::PLUS_ASSIGN) || check(TokenType::MINUS_ASSIGN) ||
         check(TokenType::STAR_ASSIGN) || check(TokenType::SLASH_ASSIGN) ||
-        check(TokenType::PERCENT_ASSIGN)) {
+        check(TokenType::PERCENT_ASSIGN) || check(TokenType::CARET_ASSIGN) ||
+        check(TokenType::PIPE_ASSIGN) || check(TokenType::SHL_ASSIGN) ||
+        check(TokenType::SHR_ASSIGN)) {
         int line = current_.line;
         std::string compoundOp;
         if (current_.type == TokenType::PLUS_ASSIGN) compoundOp = "+";
         else if (current_.type == TokenType::MINUS_ASSIGN) compoundOp = "-";
         else if (current_.type == TokenType::STAR_ASSIGN) compoundOp = "*";
         else if (current_.type == TokenType::SLASH_ASSIGN) compoundOp = "/";
-        else compoundOp = "%";
+        else if (current_.type == TokenType::PERCENT_ASSIGN) compoundOp = "%";
+        else if (current_.type == TokenType::CARET_ASSIGN) compoundOp = "^";
+        else if (current_.type == TokenType::PIPE_ASSIGN) compoundOp = "|";
+        else if (current_.type == TokenType::SHL_ASSIGN) compoundOp = "<<";
+        else compoundOp = ">>";
         advance();  // consume compound assign
         auto node = std::make_unique<AssignExprNode>(line);
         node->op = compoundOp;
@@ -485,11 +517,75 @@ AstNodePtr Parser::parseLogicalAnd() {
 }
 
 AstNodePtr Parser::parseComparison() {
-    auto left = parseAdditive();
+    auto left = parseBitwiseOr();
 
     while (check(TokenType::EQ) || check(TokenType::NEQ) ||
            check(TokenType::LT) || check(TokenType::GT) ||
            check(TokenType::LTE) || check(TokenType::GTE)) {
+        std::string op = current_.lexeme;
+        int line = current_.line;
+        advance();
+        auto node = std::make_unique<BinaryExprNode>(op, line);
+        node->left = std::move(left);
+        node->right = parseBitwiseOr();
+        left = std::move(node);
+    }
+
+    return left;
+}
+
+AstNodePtr Parser::parseBitwiseOr() {
+    auto left = parseBitwiseXor();
+
+    while (check(TokenType::PIPE)) {
+        std::string op = current_.lexeme;
+        int line = current_.line;
+        advance();
+        auto node = std::make_unique<BinaryExprNode>(op, line);
+        node->left = std::move(left);
+        node->right = parseBitwiseXor();
+        left = std::move(node);
+    }
+
+    return left;
+}
+
+AstNodePtr Parser::parseBitwiseXor() {
+    auto left = parseBitwiseAnd();
+
+    while (check(TokenType::CARET)) {
+        std::string op = current_.lexeme;
+        int line = current_.line;
+        advance();
+        auto node = std::make_unique<BinaryExprNode>(op, line);
+        node->left = std::move(left);
+        node->right = parseBitwiseAnd();
+        left = std::move(node);
+    }
+
+    return left;
+}
+
+AstNodePtr Parser::parseBitwiseAnd() {
+    auto left = parseShift();
+
+    while (check(TokenType::AMP)) {
+        std::string op = current_.lexeme;
+        int line = current_.line;
+        advance();
+        auto node = std::make_unique<BinaryExprNode>(op, line);
+        node->left = std::move(left);
+        node->right = parseShift();
+        left = std::move(node);
+    }
+
+    return left;
+}
+
+AstNodePtr Parser::parseShift() {
+    auto left = parseAdditive();
+
+    while (check(TokenType::SHL) || check(TokenType::SHR)) {
         std::string op = current_.lexeme;
         int line = current_.line;
         advance();
@@ -708,6 +804,7 @@ AstNodePtr Parser::parsePrimary() {
             auto node = std::make_unique<StructLiteralNode>(name, line);
             if (!check(TokenType::RBRACE)) {
                 do {
+                    if (check(TokenType::RBRACE)) break;  // trailing comma
                     Token fieldName = expect(TokenType::IDENT, "Expected field name");
                     expect(TokenType::COLON, "Expected ':' after field name");
                     auto value = parseExpression();
@@ -738,6 +835,23 @@ AstNodePtr Parser::parsePrimary() {
     // Loop expression: loop { }
     if (check(TokenType::LOOP)) {
         return parseLoopStmt();
+    }
+
+    // Return as expression (never type): return expr
+    if (check(TokenType::RETURN)) {
+        int retLine = current_.line;
+        advance();  // consume RETURN
+        auto retNode = std::make_unique<ReturnStmtNode>(retLine);
+        if (!check(TokenType::SEMICOLON) && !check(TokenType::EOF_TOKEN) &&
+            !check(TokenType::RBRACE)) {
+            retNode->value = parseExpression();
+        }
+        return retNode;
+    }
+
+    // Block expression: { stmts; expr }
+    if (check(TokenType::LBRACE)) {
+        return parseBlock();
     }
 
     // Grouped expression: (expr)

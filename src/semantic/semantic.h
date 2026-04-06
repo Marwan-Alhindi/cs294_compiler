@@ -60,9 +60,42 @@ private:
 
     // Normalize integer type aliases to i32
     std::string normalizeType(const std::string& type) const;
+    // Strip reference wrappers for type comparison
+    std::string stripRef(const std::string& type) const;
+    // Check if types are compatible (lenient reference matching)
+    bool typesCompatible(const std::string& expected, const std::string& actual) const;
+    // Check if an expression node is a mutable lvalue
+    bool isMutableLvalue(AstNode* node);
+
+    // Track which impl method needs &mut self
+    std::unordered_map<std::string, bool> methodNeedsMut_;
+
+    // Track loop nesting depth for break/continue validation
+    int loopDepth_ = 0;
+
+    // Track current function return type
+    std::string currentReturnType_;
+
+    // Track current impl target type for Self resolution
+    std::string currentImplType_;
+
+    // Track last expression type in block for implicit return checking
+    std::string lastExprType_;
+
+    // Track if currently inside unary minus (for overflow check)
+    bool inUnaryMinus_ = false;
+
+    // Track current function name for exit() restriction
+    std::string currentFnName_;
+    bool inImplBlock_ = false;
+
+    // Track const values for array size resolution
+    std::unordered_map<std::string, std::string> constValues_;
 
     void registerBuiltins();
     void registerFunctions();
+    // Check if a block contains any return-with-value statement
+    bool hasReturnValue(AstNode* node) const;
 
     // Statement analysis
     void analyzeNode(AstNode* node);

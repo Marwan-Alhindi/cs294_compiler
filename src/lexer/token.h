@@ -18,7 +18,10 @@ enum class TokenType {
     ASSIGN, EQ, NEQ,
     LT, GT, LTE, GTE,
     PLUS_ASSIGN, MINUS_ASSIGN, STAR_ASSIGN, SLASH_ASSIGN, PERCENT_ASSIGN,
+    CARET_ASSIGN, PIPE_ASSIGN,
     AND_AND, OR_OR, NOT,
+    SHL, SHR,            // <<  >>
+    SHL_ASSIGN, SHR_ASSIGN, // <<=  >>=
     ARROW,       // ->
     COLON_COLON, // ::
     DOT,         // .
@@ -29,6 +32,8 @@ enum class TokenType {
     LBRACKET, RBRACKET,
     SEMICOLON, COLON, COMMA,
     AMP,         // &
+    PIPE,        // |
+    CARET,       // ^
 
     // Special
     EOF_TOKEN,

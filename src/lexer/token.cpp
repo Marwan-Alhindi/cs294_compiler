@@ -41,9 +41,15 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::STAR_ASSIGN:   return "STAR_ASSIGN";
         case TokenType::SLASH_ASSIGN:  return "SLASH_ASSIGN";
         case TokenType::PERCENT_ASSIGN: return "PERCENT_ASSIGN";
+        case TokenType::CARET_ASSIGN:  return "CARET_ASSIGN";
+        case TokenType::PIPE_ASSIGN:   return "PIPE_ASSIGN";
         case TokenType::AND_AND:       return "AND_AND";
         case TokenType::OR_OR:         return "OR_OR";
         case TokenType::NOT:           return "NOT";
+        case TokenType::SHL:           return "SHL";
+        case TokenType::SHR:           return "SHR";
+        case TokenType::SHL_ASSIGN:    return "SHL_ASSIGN";
+        case TokenType::SHR_ASSIGN:    return "SHR_ASSIGN";
         case TokenType::ARROW:         return "ARROW";
         case TokenType::COLON_COLON:   return "COLON_COLON";
         case TokenType::DOT:           return "DOT";
@@ -57,6 +63,8 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::COLON:         return "COLON";
         case TokenType::COMMA:         return "COMMA";
         case TokenType::AMP:           return "AMP";
+        case TokenType::PIPE:          return "PIPE";
+        case TokenType::CARET:         return "CARET";
         case TokenType::EOF_TOKEN:     return "EOF";
         case TokenType::ILLEGAL:       return "ILLEGAL";
     }

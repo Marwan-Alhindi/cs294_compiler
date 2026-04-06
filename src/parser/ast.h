@@ -72,6 +72,7 @@ struct ParamNode {
     std::string typeName;
     bool isSelf = false;
     bool isMutSelf = false;
+    bool isMut = false;    // mut keyword on non-self params
     int line = 0;
 };
 

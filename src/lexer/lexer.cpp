@@ -131,6 +131,25 @@ Token Lexer::nextToken() {
     if (c == '"') {
         return readString();
     }
+    // Character literal: 'x' or '\n' etc
+    if (c == '\'') {
+        size_t start = pos;   // pos points at the opening '
+        advance();            // skip opening '
+        if (pos < source.length() && peekChar() == '\\') {
+            advance(); // skip backslash
+            advance(); // skip escaped char
+        } else if (pos < source.length()) {
+            advance(); // skip the character
+        }
+        if (pos < source.length() && peekChar() == '\'') {
+            advance(); // skip closing '
+            std::string lexeme = source.substr(start, pos - start);
+            return Token{TokenType::NUMBER, lexeme, line};
+        }
+        // Not a valid char literal — treat as number anyway
+        std::string lexeme = source.substr(start, pos - start);
+        return Token{TokenType::NUMBER, lexeme, line};
+    }
 
     advance();
     switch (c) {
@@ -181,12 +200,28 @@ Token Lexer::nextToken() {
             }
             return Token{TokenType::NOT, "!", line};
         case '<':
+            if (peekChar() == '<') {
+                advance();
+                if (peekChar() == '=') {
+                    advance();
+                    return Token{TokenType::SHL_ASSIGN, "<<=", line};
+                }
+                return Token{TokenType::SHL, "<<", line};
+            }
             if (peekChar() == '=') {
                 advance();
                 return Token{TokenType::LTE, "<=", line};
             }
             return Token{TokenType::LT, "<", line};
         case '>':
+            if (peekChar() == '>') {
+                advance();
+                if (peekChar() == '=') {
+                    advance();
+                    return Token{TokenType::SHR_ASSIGN, ">>=", line};
+                }
+                return Token{TokenType::SHR, ">>", line};
+            }
             if (peekChar() == '=') {
                 advance();
                 return Token{TokenType::GTE, ">=", line};
@@ -203,7 +238,17 @@ Token Lexer::nextToken() {
                 advance();
                 return Token{TokenType::OR_OR, "||", line};
             }
-            return Token{TokenType::ILLEGAL, "|", line};
+            if (peekChar() == '=') {
+                advance();
+                return Token{TokenType::PIPE_ASSIGN, "|=", line};
+            }
+            return Token{TokenType::PIPE, "|", line};
+        case '^':
+            if (peekChar() == '=') {
+                advance();
+                return Token{TokenType::CARET_ASSIGN, "^=", line};
+            }
+            return Token{TokenType::CARET, "^", line};
         case ':':
             if (peekChar() == ':') {
                 advance();

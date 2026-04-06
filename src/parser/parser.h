@@ -69,6 +69,10 @@ private:
     AstNodePtr parseLogicalOr();
     AstNodePtr parseLogicalAnd();
     AstNodePtr parseComparison();
+    AstNodePtr parseBitwiseOr();
+    AstNodePtr parseBitwiseXor();
+    AstNodePtr parseBitwiseAnd();
+    AstNodePtr parseShift();
     AstNodePtr parseAdditive();
     AstNodePtr parseMultiplicative();
     AstNodePtr parseCast();
